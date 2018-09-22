@@ -1,9 +1,14 @@
 #include <M5Stack.h>
 
-#define C4 262 //do
-#define D4 294 //le
-#define E4 330 //mi
-#define VOLUME 3 //0 to 255
+#define BLACK 0
+
+#define VOLUME_MAX 10
+#define DURATION_MAX 3000
+
+const uint16_t Melody[8] = {262, 294, 330, 349, 392, 440, 494, 523};
+uint16_t Volume = 3;
+uint16_t Duration = 500; //ms
+uint8_t MelodyCnt = 0;
 
 void beep(int hz, int ms){
   int start = millis();
@@ -12,7 +17,7 @@ void beep(int hz, int ms){
 
   while(true){
     if(sw){
-      dacWrite(25, VOLUME);
+      dacWrite(25, Volume);
     }else{
       dacWrite(25, 0);
     }
@@ -22,21 +27,51 @@ void beep(int hz, int ms){
   }
 }
 
+void updateVolumeDisplay(){
+  M5.Lcd.fillRect(85, 0, 100, 16, 0);
+  M5.Lcd.setCursor(85, 0);
+  M5.Lcd.println(String(Volume));
+}
+
+void updateDurationDisplay(){
+  M5.Lcd.fillRect(110, 16, 100, 16, 0);
+  M5.Lcd.setCursor(110, 16);
+  M5.Lcd.println(String(Duration) + "ms");
+}
+
 void setup(){
   M5.begin();
+  M5.Lcd.setCursor(0, 0);
+  M5.Lcd.setTextSize(2);
+  M5.Lcd.println("Volume:");
+  M5.Lcd.println("Duration:");
+  updateVolumeDisplay();
+  updateDurationDisplay();
 }
 
 void loop(){
   if(M5.BtnA.wasPressed()){
-    beep(C4, 500);
+    Volume += 1;
+    if(Volume > VOLUME_MAX){
+      Volume = 0;
+    }
+    updateVolumeDisplay();
   }
 
   if(M5.BtnB.wasPressed()){
-    beep(D4, 500);
+    Duration += 500;
+    if(Duration > DURATION_MAX){
+      Duration = 500;
+    }
+    updateDurationDisplay();
   }
 
   if(M5.BtnC.wasPressed()){
-    beep(E4, 500);
+    beep(Melody[MelodyCnt], Duration);
+    MelodyCnt += 1;
+    if(MelodyCnt >= 8){
+      MelodyCnt = 0;
+    }
   }
 
   M5.update();
